@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: client
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: client
+        version: v1
+    spec:
+      serviceAccountName: client
+      containers:
+        - image: grpc-load-balancing/client:1
+          name: client
+          env:
+            - name: SERVER_ADDRESS
+              value: dns:///proxy:8080
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
