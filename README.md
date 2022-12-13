@@ -165,19 +165,18 @@ kubectl delete namespace proxy
 ## Options:
 
 1. Don't support proxy scaling -- just run one huge proxy :)
-
-
-Assuming that clients implement rudimentary DNS load balancing and that we have an ingress proxy for server instances:
-2. Poor man support for proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to eventually enforce clients to reconnect and re-resolve DNS of the proxy
-
-Without DNS load balancing on clients and no ingress proxy for server instances:
+2. Poor man support for proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to eventually enforce clients to reconnect and re-resolve DNS of the proxy.
+   (Assuming that clients implement rudimentary DNS load balancing and that we have an ingress proxy for server instances)
 3. Put a proxy as a sidecar next to each client instance.
+   (Without DNS load balancing on clients and no ingress proxy for server instances)
+
+Discussion:
 
 1. not acceptable
-2. depends on client side code; it does not support progressive deployments of the proxy; potentially too many hops unless it is run as a daemon set
+2. interdependent with the client side code; it does not support progressive deployments of the proxy; potentially too many hops unless it is run as a daemon set which could be costly?!
 3. solves all problems stated at 2 - to be tested how would it support progressive releases (canary / blue-green). Global rate limiting theoretically might be possible.
 
 
-TODO
+## TODO
 
 * [ ] attempt a deployment with a client side proxy as sidecar and see what possibilities are available for progressive deployments
