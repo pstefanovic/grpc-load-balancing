@@ -114,10 +114,9 @@ Clean up
 kubectl delete namespace maxage
 ```
 
-### Proxy
+### Server Side Ingress Proxy
 
-Server still runs as a headless services but without any maxage.
-We run a proxy in front of server instances.
+Server runs as a headless services but without maxage. We run a proxy in front of server instances.
 
 ```sh
 kubectl create namespace proxy
@@ -131,7 +130,7 @@ kubectl logs -f -l app=proxy -n proxy
 ```
 
 Observe that RPC are balanced between all server instances.
-Lets increase number of server replicas from 3 to 5:
+Let's increase number of server replicas from 3 to 5:
 
 ```sh
 kubectl patch deploy server --namespace proxy -p '"spec": {"replicas": 5}'
@@ -139,8 +138,8 @@ kubectl patch deploy server --namespace proxy -p '"spec": {"replicas": 5}'
 kubectl logs -f -l app=client -n proxy
 ```
 
-Proxy discoveres new server instances, sets up connections and starts balancing RPCs to them. The proxy brings in a
-bunch of features. But it will slightly add on latency and could result in even two extra node hops (client[@node1] ->
+Proxy discovers new server instances, sets up connections and starts balancing RPCs to them. But it will slightly add on
+latency and could result in even two extra node hops (client[@node1] ->
 proxy[@node2] -> server[@node3]).
 
 However, what if we scale the proxy itself (it's running as a headless service but only with 1 instance), say from 1 to
@@ -171,6 +170,39 @@ Clean up
 
 ```sh
 kubectl delete namespace proxy
+```
+
+### Client Side Egress Proxy - Sidecar
+
+Server runs as a headless, proxy is deployed as a sidecar on each client instance. No load balancing implementation
+needed in client application. No proxy on the server side.
+
+```sh
+kubectl create namespace clsidecar
+kubectl apply -f deploy/clsidecar/server.yaml --namespace clsidecar
+kubectl apply -f deploy/clsidecar/client.yaml --namespace clsidecar
+
+kubectl logs -f -l app=client --container client -n clsidecar
+kubectl logs -f -l app=client --container proxy -n clsidecar
+```
+
+Observe that RPC are balanced between all server instances.
+Let's increase number of server replicas from 3 to 5:
+
+```sh
+kubectl patch deploy server --namespace clsidecar -p '"spec": {"replicas": 5}'
+
+kubectl logs -f -l app=client --container client -n clsidecar
+```
+
+Sidecar proxy discovers new server instances, sets up connections and starts balancing RPCs to them.
+Added hop is local to the pod network namespace, aka no added node hops.
+Proxy scales with the client, therefore no issues there.
+
+Clean up
+
+```sh
+kubectl delete namespace clsidecar
 ```
 
 ## Options:
