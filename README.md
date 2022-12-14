@@ -185,15 +185,16 @@ kubectl delete namespace proxy
 Discussion:
 
 1. not acceptable
-2. dns load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client side code;
+2. load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client side code; load
+   balancing proxy->server is based on dns which implies a delay in service discovery, it's not ideal)
    re-deployments of the proxy are tricky; potential latency increase due to too many node hops
    client@node1 -> proxy@node2 -> server@node3
-3. optimal latency, optimal load balancing behaviour for the price of more complicated client deployment but arguably
-   the sidecar could be transparently injected by the infra teams at the time of deployment
-
+3. optimal latency, optimal load balancing behaviour (although still relies on dns load balancing proxy->server) for the
+   price of more complicated client deployment but arguably the sidecar could be transparently
+   injected by the infra teams at the time of deployment
 
 ## TODO
 
-* [ ] deployment with a client side proxy as sidecar 
-   * [ ] options for progressive deployments of servers
-   * [ ] options for global rate limiting
+* [ ] deployment with a client side proxy as sidecar
+    * [ ] options for progressive deployments of servers
+    * [ ] options for global rate limiting
