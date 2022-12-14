@@ -204,6 +204,99 @@ Clean up
 kubectl delete namespace clsidecar
 ```
 
+### Weighted Traffic Routing ~ Canary
+
+Run 2 server versions as a headless services, proxy is deployed as a sidecar on each client instance. No load
+balancing implementation needed in client application. No proxy on the server side.
+
+```sh
+kubectl create namespace canary
+kubectl apply -f deploy/canary/server-v1.yaml --namespace canary
+kubectl apply -f deploy/canary/server-v2.yaml --namespace canary
+kubectl apply -f deploy/canary/client.yaml --namespace canary
+
+kubectl logs -f -l app=client --container client -n canary
+```
+
+Observe that RPC are balanced between server-v1 instances, while server-v2 is not getting any traffic.
+Let's update client proxy configuration by adding server-v2 as lbendpoint to server cluster definition:
+
+```yaml
+...
+- lb_endpoints:
+    - load_balancing_weight: 99
+      endpoint:
+        address:
+          socket_address:
+            address: server-v1
+            port_value: 50051
+
+    - load_balancing_weight: 1
+      endpoint:
+        address:
+          socket_address:
+            address: server-v2
+            port_value: 50051
+```
+
+```sh
+kubectl edit configmap proxyconfig -n canary
+## make adjustments and restart the client
+kubectl delete pods -l app=client -n canary
+```
+
+Observe that traffic is shifting to server-v2. Now update the config to 50/50 ration:
+
+```yaml
+...
+- lb_endpoints:
+    - load_balancing_weight: 99
+      endpoint:
+        address:
+          socket_address:
+            address: server-v1
+            port_value: 50051
+
+    - load_balancing_weight: 1
+      endpoint:
+        address:
+          socket_address:
+            address: server-v2
+            port_value: 50051
+```
+
+Observe significant amount traffic flowing to server-v2. Now remove server-v1 from the lbendpoints:
+
+```yaml
+...
+- lb_endpoints:
+    - load_balancing_weight: 100
+      endpoint:
+        address:
+          socket_address:
+            address: server-v2
+            port_value: 50051
+```
+
+Observe no traffic flowing to server-v1 anymore.
+
+This approach demonstrates that blue-green or canary deployments can be achieved with just a client side egress proxy.
+Header-based routing could also be configured if needed for so-called initial preview deployments that sometimes.
+
+Issue however is the static proxy configuration - it imposes tight coupling between clients and servers.
+This begs for a dynamic control which leads us into control planes - xDS to the rescue.
+
+Clean up
+
+```sh
+kubectl delete namespace canary
+```
+
+### xDS Control Plane ~ Dynamic Canary
+
+
+---
+
 ## Options:
 
 1. Server side ingress proxy without scaling support -- just run singular and huge proxy instance :)
@@ -227,6 +320,6 @@ Discussion:
 ## TODO
 
 * [ ] client side proxy as sidecar
-    * [x] client sidecar deployment 
-    * [ ] options for progressive deployments of servers
+    * [x] client sidecar deployment
+    * [ ] options for progressive deployments of servers (static & dynamic)
     * [ ] options for global rate limiting
