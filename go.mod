@@ -1,4 +1,4 @@
-module com.deliveryhero/grpc-load-balancing
+module pstefanovic/grpc-load-balancing
 
 go 1.17
 
