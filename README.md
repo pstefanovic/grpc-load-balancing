@@ -1,21 +1,24 @@
-# gRPC Load Balancing
+# Canaries
+
+## Demo Setup
 
 gRPC between client and server. Client sends 10 concurrent `Hello` RPCs, wait for all responses, prints them on output
 and loops forever.
 
 A request is a `hello` message containing a client identifier and the request counter, while the response is just an
-echo with
-an added prefix, a server identifier that processed and responded on the request.
+echo with an added prefix, a server identifier that processed and responded on the request.
 
 Client accepts a server address as ENV, e.g. dns:///server:50051. It will depend on DNS resolution and will apply client
-side
-round-robin load balance in case multiple IPs are resolved.
+side round-robin load balance in case multiple IPs are resolved.
 
 ## Build
 
 ```sh
 docker build -t grpc-load-balancing/client:1 --target client -f Dockerfile .
 docker build -t grpc-load-balancing/server:1 --target server -f Dockerfile .
+
+# used for more advanced options
+docker build -t grpc-load-balancing/xds:1 --target xds -f Dockerfile .
 ```
 
 ^^^ watch the version number if multiple versions are created
@@ -31,6 +34,9 @@ Load client and server docker images
 ```sh
 kind load docker-image grpc-load-balancing/client:1 --name grpc-load-balancing
 kind load docker-image grpc-load-balancing/server:1 --name grpc-load-balancing
+
+# used for more advanced options
+kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 ```
 
 ### Service Type Cluster IP
@@ -281,10 +287,12 @@ Observe significant amount traffic flowing to server-v2. Now remove server-v1 fr
 Observe no traffic flowing to server-v1 anymore.
 
 This approach demonstrates that blue-green or canary deployments can be achieved with just a client side egress proxy.
-Header-based routing could also be configured if needed for so-called initial preview deployments that sometimes.
+Same result could be achieved adjusting route configurations (filters section) which also brings header-based routing
+out of the box. Header based routing is useful for so-called initial preview deployments, sometimes a precursor to
+canaries.
 
 Issue however is the static proxy configuration - it imposes tight coupling between clients and servers.
-This begs for a dynamic control which leads us into control planes - xDS to the rescue.
+This begs for control planes.
 
 Clean up
 
@@ -292,7 +300,23 @@ Clean up
 kubectl delete namespace canary
 ```
 
-### xDS Control Plane ~ Dynamic Canary
+### xDS Control Plane
+
+[xDS API](https://github.com/cncf/xds) (_x_ discover service, originally from
+[envoy](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/dynamic_configuration)) is an attempt
+at a standard API that different proxy solutions implement to load and adapt into their vendor specific configuration.
+Such API decouples proxies and configuration management and allows altering proxy solutions "seamlessly" (at least in
+terms configuration management solution).
+
+Configuration could be managed in various ways, for example plugging into k8s API and augmenting it with CRDs.
+Once created/updated etc. configuration is feed into proxies through xDS API. Essentially, proxies receive their traffic
+configuration from the xDS API Server and are continuously kept up to date.
+
+Here for a control plane using a simplified version - example of
+[xDSServer](https://github.com/stevesloka/envoy-xds-server). It centralizes traffic configuration (uses a file
+underneath) and serves it through a xDS API. Proxies are pointed to use xDSServer as source of configuration.
+
+
 
 
 ---
