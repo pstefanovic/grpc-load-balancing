@@ -227,6 +227,7 @@ Discussion:
 
 ## TODO
 
-* [ ] deployment with a client side proxy as sidecar
+* [ ] client side proxy as sidecar
+    * [x] client sidecar deployment 
     * [ ] options for progressive deployments of servers
     * [ ] options for global rate limiting
