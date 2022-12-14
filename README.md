@@ -30,7 +30,6 @@ Load client and server docker images
 
 ```sh
 kind load docker-image grpc-load-balancing/client:1 --name grpc-load-balancing
-
 kind load docker-image grpc-load-balancing/server:1 --name grpc-load-balancing
 ```
 
