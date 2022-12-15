@@ -49,6 +49,8 @@ func main() {
 		addr = DefaultAddr
 	}
 
+	time.Sleep(12 * time.Second) // hack: give time for the proxy or servers to start up in the demos
+
 	conn, err := grpc.Dial(addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [{"round_robin":{}}]}`),
