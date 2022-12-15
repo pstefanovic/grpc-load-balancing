@@ -1,4 +1,4 @@
-# Canaries
+# east-west gRPC Load Balancing in k8s clusters
 
 ## Demo Setup
 
@@ -69,7 +69,7 @@ kubectl apply -f deploy/headless/client.yaml --namespace headless
 kubectl logs -f -l app=client -n headless
 ```
 
-Observe that RPC are balanced between server instances. However lets increase number of server replicas from 3 to 5:
+Observe that RPC are balanced between server instances. However, lets increase number of server replicas from 3 to 5:
 
 ```sh
 kubectl patch deploy server --namespace headless -p '"spec": {"replicas": 5}'
@@ -308,7 +308,7 @@ at a standard API that different proxy solutions implement to load and adapt int
 Such API decouples proxies and configuration management and allows altering proxy solutions "seamlessly" (at least in
 terms configuration management solution).
 
-Configuration could be managed in various ways, for example plugging into k8s API and augmenting it with CRDs.
+Configuration could be managed in various ways, for example plugging into k8s API and augmenting it with use of CRDs.
 Once created/updated etc. configuration is feed into proxies through xDS API. Essentially, proxies receive their traffic
 configuration from the xDS API Server and are continuously kept up to date.
 
@@ -336,41 +336,92 @@ kubectl logs -f -l app=client --container client -n xds
 Observe that sidecar proxy started and is balancing RPCs between server-v1 instances, while server-v2 is not getting any
 traffic.
 
-Update xDSServer configuration and move some traffic to server-v2 instances:
+Let's update xDSServer configuration and move some traffic to server-v2 instances. So, adding an entry in the
+listener routes for server-v2, only 5%:
 
-```sh
-
-
+```yaml
+...
+routes:
+  - name: local_route
+    prefix: /
+    clusters:
+      - name: server-v1
+        weight: 95
+      - name: server-v2
+        weight: 5
 ```
 
+```sh
+kubectl edit configmap xdsconfig -n xds
+# trigger configmap re-mount on the xdsserver
+# (or wait for the cm to be update automatically - this is a hit & miss due to some bug in the xdsdummy config watcher)
+kubectl delete pod -l app=xds -n xds
+```
 
+Observe that small percentage of traffic is moving to server-v2. In the same fashion increase traffic to 50% and then
+set to 100 and remove server-v1.
 
+```yaml
+...
+routes:
+  - name: local_route
+    prefix: /
+    clusters:
+      - name: server-v1
+        weight: 50
+      - name: server-v2
+        weight: 50
+```
+
+```yaml
+...
+routes:
+  - name: local_route
+    prefix: /
+    clusters:
+      - name: server-v2
+        weight: 100
+```
+
+Observe no traffic is flowing to server-v1.
+
+Clean up
+
+```sh
+kubectl delete namespace xds
+```
 
 ---
 
-## Options:
+## gRPC Load Balancing Options:
 
-1. Server side ingress proxy without scaling support -- just run singular and huge proxy instance :)
-2. Server side ingress proxy with poor man proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to
-   eventually enforce
-   clients to reconnect and re-resolve DNS of the proxy. (assuming that clients implement rudimentary DNS load
-   balancing)
-3. Client side egress proxy as a sidecar (or perhaps as a daemonset)
+1. No proxies other than kube-proxy, just recreate connections on each RPC or have client side dns balancing and maxage
+2. Server side ingress proxy without scaling support -- just run singular and huge proxy instance :)
+3. Server side ingress proxy with poor man proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to
+   eventually enforce clients to reconnect and re-resolve DNS of the proxy. (assuming that clients implement rudimentary
+   DNS load balancing)
+4. Client side egress proxy as a sidecar (or perhaps as a daemonset)
+5. Proxyless-grpc - xDS Load Balancing in grpc
+   core ([intro](https://events.istio.io/istiocon-2022/sessions/proxyless-grpc/)
+   , [feature overview](https://grpc.github.io/grpc/core/md_doc_grpc_xds_features.html))
 
 Discussion:
 
-1. not acceptable
-2. load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client side code; load
+1. Not acceptable, since weighted traffic routing will be needed which implies a smarter proxy then kube-proxy
+2. Not acceptable
+3. Load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client side code; load
    balancing proxy->server is based on dns which implies a delay in service discovery, it's not ideal)
    re-deployments of the proxy are tricky; potential latency increase due to too many node hops
    client@node1 -> proxy@node2 -> server@node3
-3. optimal latency, optimal load balancing behaviour (although still relies on dns load balancing proxy->server) for the
+4. Optimal latency, optimal load balancing behaviour (although still relies on dns load balancing proxy->server) for the
    price of more complicated client deployment but arguably the sidecar could be transparently
-   injected by the infra teams at the time of deployment
+   injected by the infra teams at the time of deployment.
+   This option though is only viable alongside a properly integrated xDS control plane with improved setup that makes
+   proxies transparent to the client applications running as the main container.
+5. Still lots of development in progress - looks like a promising pick for the future
 
 ## TODO
 
-* [ ] client side proxy as sidecar
-    * [x] client sidecar deployment
-    * [ ] options for progressive deployments of servers (static & dynamic)
-    * [ ] options for global rate limiting
+* [ ] service-mesh tryouts
+    * [ ] istio tryout with only client side proxy as a sidecar
+    * [ ] linkerd tryout ...
