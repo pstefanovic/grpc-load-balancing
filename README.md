@@ -45,8 +45,8 @@ kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 
 ```sh
 kubectl create namespace clusterip
-kubectl apply -f deploy/clusterip/server.yaml --namespace clusterip
-kubectl apply -f deploy/clusterip/client.yaml --namespace clusterip
+kubectl apply -f deploy/clusterip/server.yaml -n clusterip
+kubectl apply -f deploy/clusterip/client.yaml -n clusterip
 
 kubectl logs -f -l app=client -n clusterip
 ```
@@ -63,10 +63,10 @@ kubectl delete namespace clusterip
 
 ```sh
 kubectl create namespace headless
-kubectl apply -f deploy/headless/server.yaml --namespace headless
+kubectl apply -f deploy/headless/server.yaml -n headless
 
 ## wait a few sec!!!
-kubectl apply -f deploy/headless/client.yaml --namespace headless
+kubectl apply -f deploy/headless/client.yaml -n headless
 
 kubectl logs -f -l app=client -n headless
 ```
@@ -75,7 +75,7 @@ Observe that RPCs are balanced between server instances.
 However, let's increase the number of server replicas from 3 to 5:
 
 ```sh
-kubectl patch deploy server --namespace headless -p '"spec": {"replicas": 5}'
+kubectl patch deploy server -n headless -p '"spec": {"replicas": 5}'
 ```
 
 For example, two new replicas are (`kubectl get pods -n headless`):
@@ -97,8 +97,8 @@ Setting max-age to 10s + grace 20s
 
 ```sh
 kubectl create namespace maxage
-kubectl apply -f deploy/maxage/server.yaml --namespace maxage
-kubectl apply -f deploy/maxage/client.yaml --namespace maxage
+kubectl apply -f deploy/maxage/server.yaml -n maxage
+kubectl apply -f deploy/maxage/client.yaml -n maxage
 
 kubectl logs -f -l app=client -n maxage
 # observe for at least 1 minute
@@ -107,14 +107,14 @@ kubectl logs -f -l app=client -n maxage
 Observe that RPCs are balanced between server instances. Let's increase the number of server replicas from 3 to 5:
 
 ```sh
-kubectl patch deploy server --namespace maxage -p '"spec": {"replicas": 5}'
+kubectl patch deploy server -n maxage -p '"spec": {"replicas": 5}'
 
 kubectl logs -f -l app=client -n maxage
 # observe for at least 1 minute
 ```
 
-Thanks to the max-age setting, a connection is recreated on the client side, and as a side effect, new pods are resolved
-via DNS. So eventually, there is traffic on all replicas (check their logs or client logs).
+Thanks to the max-age setting, a connection is recreated on the client side, and as a side effect, new server instances
+are resolved via DNS. So eventually, there is traffic on all server instances (check their logs or client logs).
 
 Clean up
 
@@ -124,13 +124,13 @@ kubectl delete namespace maxage
 
 ### Server-Side Ingress Proxy
 
-The server runs as a headless service but without max age. We run a proxy in front of server instances.
+The server runs as a headless service but without max age, instead run a proxy in front of server instances.
 
 ```sh
 kubectl create namespace proxy
-kubectl apply -f deploy/proxy/server.yaml --namespace proxy
-kubectl apply -f deploy/proxy/proxy.yaml --namespace proxy
-kubectl apply -f deploy/proxy/client.yaml --namespace proxy
+kubectl apply -f deploy/proxy/server.yaml -n proxy
+kubectl apply -f deploy/proxy/proxy.yaml -n proxy
+kubectl apply -f deploy/proxy/client.yaml -n proxy
 
 
 kubectl logs -f -l app=client -n proxy
@@ -141,25 +141,25 @@ Observe that RPCs are balanced between all server instances.
 Let's increase the number of server replicas from 3 to 5:
 
 ```sh
-kubectl patch deploy server --namespace proxy -p '"spec": {"replicas": 5}'
+kubectl patch deploy server -n proxy -p '"spec": {"replicas": 5}'
 
 kubectl logs -f -l app=client -n proxy
 ```
 
-Proxy discovers new server instances, sets up connections, and balances RPCs. But it will slightly add on
-latency and could result in even two extra node hops (client[@node1] -> proxy[@node2] -> server[@node3]).
+Proxy discovers new server instances, sets up connections, and balances RPCs. Proxy also slightly adds on
+latency and could result in up to two extra node hops (client[@node1] -> proxy[@node2] -> server[@node3]).
 
 However, what if we scale the proxy itself (it's running as a headless service but only with one instance), say from 1
 to 3 and let's observe logs of newly spawned proxy instances:
 
 ```sh
-kubectl patch deploy proxy --namespace proxy -p '"spec": {"replicas": 3}'
+kubectl patch deploy proxy -n proxy -p '"spec": {"replicas": 3}'
 
 kubectl logs -f proxy-786cfbbf44-xzhhs -nproxy
 kubectl logs -f proxy-786cfbbf44-g9q7p -nproxy
 ```
 
-There are no logs, and newly spawned proxy instances are idling. Let's restart the client pod.
+Newly spawned proxy instances are idling. Let's restart the client pod.
 
 ```sh
 kubectl delete pod -l app=client -nproxy
@@ -168,7 +168,7 @@ kubectl logs -f proxy-786cfbbf44-xzhhs -nproxy
 kubectl logs -f proxy-786cfbbf44-g9q7p -nproxy
 ```
 
-There are now logs.
+Now all proxy instances are processing traffic.
 
 In conclusion, the traffic must be correctly load-balanced from the downstream/client/caller side.
 
@@ -181,12 +181,12 @@ kubectl delete namespace proxy
 ### Client Side Egress Proxy - Sidecar
 
 The server runs as a headless service, and a proxy is deployed as a sidecar on each client instance. No load-balancing
-implementation needed in a client application. No proxy on the server side.
+implementation needed in a client application—also, no proxy on the server side.
 
 ```sh
 kubectl create namespace clsidecar
-kubectl apply -f deploy/clsidecar/server.yaml --namespace clsidecar
-kubectl apply -f deploy/clsidecar/client.yaml --namespace clsidecar
+kubectl apply -f deploy/clsidecar/server.yaml -n clsidecar
+kubectl apply -f deploy/clsidecar/client.yaml -n clsidecar
 
 kubectl logs -f -l app=client --container client -n clsidecar
 kubectl logs -f -l app=client --container proxy -n clsidecar
@@ -196,7 +196,7 @@ Observe that RPCs are balanced between all server instances.
 Let's increase the number of server replicas from 3 to 5:
 
 ```sh
-kubectl patch deploy server --namespace clsidecar -p '"spec": {"replicas": 5}'
+kubectl patch deploy server -n clsidecar -p '"spec": {"replicas": 5}'
 
 kubectl logs -f -l app=client --container client -n clsidecar
 ```
@@ -218,9 +218,9 @@ load-balancing implementation is needed in a client application—also, no proxy
 
 ```sh
 kubectl create namespace canary
-kubectl apply -f deploy/canary/server-v1.yaml --namespace canary
-kubectl apply -f deploy/canary/server-v2.yaml --namespace canary
-kubectl apply -f deploy/canary/client.yaml --namespace canary
+kubectl apply -f deploy/canary/server-v1.yaml -n canary
+kubectl apply -f deploy/canary/server-v2.yaml -n canary
+kubectl apply -f deploy/canary/client.yaml -n canary
 
 kubectl logs -f -l app=client --container client -n canary
 ```
@@ -304,9 +304,9 @@ kubectl delete namespace canary
 
 [xDS API](https://github.com/cncf/xds) (_x_ discover service, originally from
 [envoy](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/dynamic_configuration)) is an attempt
-at a standard API that different proxy solutions implement to load and adapt into their vendor-specific configuration.
+at a standard API that different proxy products implement to load and adapt into their vendor-specific configuration.
 Such API decouples proxies and configuration management and allows altering proxy solutions "seamlessly" (at least in
-terms configuration management solution).
+terms of a configuration management solution).
 
 Configuration could be managed in various ways, for example, by plugging into k8s API and augmenting it using CRDs.
 Once created/updated etc., the configuration is fed into proxies through xDS API. Essentially, proxies receive their
@@ -325,10 +325,10 @@ No load-balancing implementation is needed in a client application—also, no pr
 ```sh
 kubectl create namespace xds
 
-kubectl apply -f deploy/xds/xds.yaml --namespace xds
-kubectl apply -f deploy/xds/server-v1.yaml --namespace xds
-kubectl apply -f deploy/xds/server-v2.yaml --namespace xds
-kubectl apply -f deploy/xds/client.yaml --namespace xds
+kubectl apply -f deploy/xds/xds.yaml -n xds
+kubectl apply -f deploy/xds/server-v1.yaml -n xds
+kubectl apply -f deploy/xds/server-v2.yaml -n xds
+kubectl apply -f deploy/xds/client.yaml -n xds
 
 kubectl logs -f -l app=client --container client -n xds
 ```
@@ -359,7 +359,7 @@ kubectl delete pod -l app=xds -n xds
 ```
 
 Observe that a small percentage of traffic is moving to server-v2. In the same fashion, increase traffic to 50% and then
-set to 100 and remove server-v1.
+set to 100% and remove server-v1.
 
 ```yaml
 ...
