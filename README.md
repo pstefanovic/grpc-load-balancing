@@ -11,7 +11,7 @@ echo with an added prefix- a server identifier of the server that processed the 
 Client accepts a server address as ENV, e.g., dns:///server:50051. It will depend on DNS resolution and will apply
 client side round-robin load balance in case multiple IPs are resolved.
 
-## Build
+### Build
 
 ```sh
 docker build -t grpc-load-balancing/client:1 --target client -f Dockerfile .
@@ -23,7 +23,7 @@ docker build -t grpc-load-balancing/xds:1 --target xds -f Dockerfile .
 
 ^^^ watch the version number if multiple versions are created
 
-## Deploy to Kind cluster
+### Deploy to Kind cluster
 
 ```sh
 kind create cluster --name grpc-load-balancing
@@ -38,6 +38,8 @@ kind load docker-image grpc-load-balancing/server:1 --name grpc-load-balancing
 # used for more advanced options
 kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 ```
+
+## Load Balancing Options - Demos
 
 ### Service Type Cluster IP
 
