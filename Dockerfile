@@ -19,7 +19,7 @@ COPY . .
 RUN go build -o /usr/local/bin/server helloworld/greeter_server/main.go
 RUN go build -o /usr/local/bin/client helloworld/greeter_client/main.go
 
-RUN go build -o /usr/local/bin/xds ./sloka/cmd/server/main.go
+RUN go build -o /usr/local/bin/xds ./xdsdummy/cmd/server/main.go
 
 FROM alpine:3.16 as server
 

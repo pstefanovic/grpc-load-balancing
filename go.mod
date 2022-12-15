@@ -13,8 +13,6 @@ require (
 	gopkg.in/yaml.v2 v2.2.3
 )
 
-require github.com/stevesloka/envoy-xds-server v0.0.0-20220425013932-a2cfc167802f
-
 require (
 	github.com/census-instrumentation/opencensus-proto v0.2.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1 // indirect
