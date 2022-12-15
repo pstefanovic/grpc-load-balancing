@@ -16,6 +16,7 @@ package resources
 
 import (
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -77,6 +78,14 @@ func MakeRoute(routes []Route) *route.RouteConfiguration {
 	var rts []*route.Route
 
 	for _, r := range routes {
+		var clusters []*route.WeightedCluster_ClusterWeight
+		for _, wcluster := range r.Clusters {
+			clusters = append(clusters, &route.WeightedCluster_ClusterWeight{
+				Name:   wcluster.Name,
+				Weight: &wrapperspb.UInt32Value{Value: wcluster.Weight},
+			})
+		}
+
 		rts = append(rts, &route.Route{
 			//Name: r.Name,
 			Match: &route.RouteMatch{
@@ -86,8 +95,10 @@ func MakeRoute(routes []Route) *route.RouteConfiguration {
 			},
 			Action: &route.Route_Route{
 				Route: &route.RouteAction{
-					ClusterSpecifier: &route.RouteAction_Cluster{
-						Cluster: r.Cluster,
+					ClusterSpecifier: &route.RouteAction_WeightedClusters{
+						WeightedClusters: &route.WeightedCluster{
+							Clusters: clusters,
+						},
 					},
 				},
 			},

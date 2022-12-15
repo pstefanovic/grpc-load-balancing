@@ -65,10 +65,14 @@ data:
             - name: local_route
               prefix: /
               clusters:
-                - server_cluster
+                - name: server-v1
+                  weight: 100
       clusters:
-        - name: server_cluster
+        - name: server-v1
           endpoints:
             - address: server-v1
               port: 50051
-
+        - name: server-v2
+          endpoints:
+            - address: server-v2
+              port: 50051

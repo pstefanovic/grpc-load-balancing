@@ -336,7 +336,13 @@ kubectl logs -f -l app=client --container client -n xds
 Observe that sidecar proxy started and is balancing RPCs between server-v1 instances, while server-v2 is not getting any
 traffic.
 
-...
+Update xDSServer configuration and move some traffic to server-v2 instances:
+
+```sh
+
+
+```
+
 
 
 
