@@ -316,8 +316,27 @@ Here for a control plane using a simplified version - example of
 [xDSServer](https://github.com/stevesloka/envoy-xds-server). It centralizes traffic configuration (uses a file
 underneath) and serves it through a xDS API. Proxies are pointed to use xDSServer as source of configuration.
 
+#### Testing
 
+Run 2 server versions as a headless services, proxy is deployed as a sidecar on each client instance.
+Run a xdsServer and point sidecar proxy to it.
+No load balancing implementation needed in client application. No proxy on the server side.
 
+```sh
+kubectl create namespace xds
+
+kubectl apply -f deploy/xds/xds.yaml --namespace xds
+kubectl apply -f deploy/xds/server-v1.yaml --namespace xds
+kubectl apply -f deploy/xds/server-v2.yaml --namespace xds
+kubectl apply -f deploy/xds/client.yaml --namespace xds
+
+kubectl logs -f -l app=client --container client -n xds
+```
+
+Observe that sidecar proxy started and is balancing RPCs between server-v1 instances, while server-v2 is not getting any
+traffic.
+
+...
 
 ---
 

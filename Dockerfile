@@ -19,6 +19,8 @@ COPY . .
 RUN go build -o /usr/local/bin/server helloworld/greeter_server/main.go
 RUN go build -o /usr/local/bin/client helloworld/greeter_client/main.go
 
+RUN go build -o /usr/local/bin/xds ./sloka/cmd/server/main.go
+
 FROM alpine:3.16 as server
 
 COPY --from=builder /usr/local/bin/server /usr/local/bin/server
@@ -34,3 +36,9 @@ COPY --from=builder /usr/local/bin/client /usr/local/bin/client
 ENV NAME="{{CLIENT_ID}}"
 
 ENTRYPOINT ["client"]
+
+FROM alpine:3.16 as xds
+
+COPY --from=builder /usr/local/bin/xds /usr/local/bin/xds
+
+ENTRYPOINT ["xds"]
