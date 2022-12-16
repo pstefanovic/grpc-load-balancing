@@ -18,11 +18,11 @@ istio and its implementation of the experimental east-west Gateway API.
 
 ### kind
 
-Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster and load demo docker
+Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster, and load the demo docker
 images:
 
 ```sh
-kind create cluster --name istio-gatway-mesh
+kind create cluster --name istio-gateway-mesh
 
 docker build -t grpc-load-balancing/client:1 --target client -f Dockerfile .
 docker build -t grpc-load-balancing/server:1 --target server -f Dockerfile .
@@ -59,10 +59,10 @@ no proxy on the server side.
 Traffic setup:
 
 * one common Service "server" that selects pods from both versions server-v1 and server-v2;
-* HTTPRoute "server-routes" that matches all traffic from "server" service and directs it to "server-v1" service.
-* client sends its traffic to a "server" Service.
+* HTTPRoute "server-routes" that matches all traffic from the "server" service and direct it to the "server-v1" service.
+* client sends its traffic to a "server" service.
 
-Deploying server, routes and client:
+Deploying server, routes, and client:
 
 ```sh
 kubectl create namespace istio
@@ -77,11 +77,12 @@ kubectl get pods -n istio
 kubectl logs -f -l app=client -n istio
 ```
 
-Observe that client pod has 2 containers - client application as main container and istio-proxy as a sidecar. Note many
-other things injected too - labels and annotations related to istio and prometheus, init container for rewriting
+Observe that the client pod has two containers - client application as the main container and istio-proxy as a sidecar.
+Many
+other things got injected too - labels and annotations related to istio and prometheus, init container for rewriting
 iptables etc.
 
-Update server-routes to shift small percentage of traffic to server-v2 service:
+Update server-routes to shift a small percentage of traffic to server-v2 service:
 
 ```yaml
 ...
@@ -101,9 +102,9 @@ Apply the changes:
 kubectl apply -f ./deploy/istio/server-routes.yaml -n istio
 ```
 
-Observe that small amount of traffic is flowing to server-v2.
+Observe that a small amount of traffic is flowing to server-v2.
 
-In the same fashion update weights to 50, 100 etc., and eventually remove server-v1 from the server-routes.
+Similarly, update weights to 50, 100, etc., and eventually remove server-v1 from the server-routes.
 
 ```yaml
 ...
@@ -125,7 +126,3 @@ rules:
         port: 50051
         weight: 100
 ```
-
-
-
-

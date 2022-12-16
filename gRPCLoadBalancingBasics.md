@@ -1,13 +1,13 @@
 # gRPC Load Balancing Basics
 
-Run through a few demonstrations of gRPC load balancing covering common pitfalls and leading into usefulness of proxies
-and control planes.
+Run through a few demonstrations of gRPC load balancing, covering common pitfalls and leading into the usefulness of
+proxies and control planes.
 
 ## Prep
 
 ### kind
 
-Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster and load demo docker
+Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster, and load the demo docker
 images:
 
 ```sh
@@ -26,8 +26,8 @@ kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 
 ### Service Type Cluster IP
 
-The server runs as a **Cluster-IP service**. Before opening a connection to the server, client runs a DNS resolution on
-the server service name which results in a single IP address.
+The server runs as a **Cluster-IP service**. Before opening a connection to the server, the client runs a DNS resolution
+on the server service name, which results in a single IP address.
 
 ```sh
 kubectl create namespace clusterip
@@ -47,9 +47,9 @@ kubectl delete namespace clusterip
 
 ### Headless service
 
-The server runs as a **headless service**. Before opening a connection to the server, client runs a DNS resolution on
-the server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
-balancing between resolved IPs.
+The server runs as a **headless service**. Before opening a connection to the server, the client runs a DNS resolution
+on the server service name, which results in multiple IP addresses, one for each server instance - the client runs a
+round-robin balancing between resolved IPs.
 
 ```sh
 kubectl create namespace headless
@@ -73,8 +73,8 @@ For example, two new instances are (`kubectl get pods -n headless`):
 * server-56dc579658-x4746
 * server-56dc579658-mjzp7
 
-There is no traffic on them (check their logs or client logs). Client will not be aware of the new server instances
-until it re-resolves DNS on the server service name - by default that happens only on connection creation.
+There is no traffic on them (check their logs or client logs). The client will not be aware of the new server instances
+until it re-resolves DNS on the server service name - by default, that happens only on connection creation.
 
 Clean up
 
@@ -84,9 +84,9 @@ kubectl delete namespace headless
 
 ### Max connection age (+headless)
 
-The server runs as a headless service. Before opening a connection to the server, client runs a DNS resolution on the
-server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
-balancing between resolved IPs.
+The server runs as a headless service. Before opening a connection to the server, the client runs a DNS resolution on
+the server service name, which results in multiple IP addresses, one for each server instance - the client runs a
+round-robin balancing between resolved IPs.
 
 Setting **max-age to 10s + grace to 20s on the server side** to force reconnection.
 
@@ -109,7 +109,7 @@ kubectl logs -f -l app=client -n maxage
 ```
 
 Thanks to the max-age setting, a connection is eventually recreated on the client side, and as a side effect, new server
-instances are resolved via DNS. So eventually, there is traffic on all server instances (check their logs or client
+instances are resolved via DNS. So ultimately, there is traffic on all server instances (check their logs or client
 logs).
 
 Clean up
@@ -120,9 +120,9 @@ kubectl delete namespace maxage
 
 ### Server-Side Proxy
 
-The server runs as a headless service but without max age, instead run a **proxy in front of server instances**.
-Proxy runs as a headless service. Before opening a connection to the proxy, client runs a DNS resolution on the
-proxy service name which potentially results in multiple IP addresses, one for each proxy instance - client runs a
+The server runs as a headless service without max age; instead, run a **proxy in front of server instances**.
+Proxy runs as a headless service. Before opening a connection to the proxy, the client runs a DNS resolution on the
+proxy service name, potentially resulting in multiple IP addresses, one for each proxy instance - the client, runs a
 round-robin balancing between resolved IPs.
 
 ```sh
@@ -148,7 +148,7 @@ kubectl logs -f -l app=client -n proxy
 Proxy discovers new server instances, sets up connections, and balances RPCs. Proxy also slightly adds on
 latency and could result in up to two extra node hops (client[@node1] -> proxy[@node2] -> server[@node3]).
 
-However, what if we scale the proxy itself (it's running as a headless service but only with one instance). Let's
+However, what if we scale the proxy itself (it's running as a headless service but only with one instance)? Let's
 increase from 1 to 3 replicas and observe logs of newly spawned proxy instances:
 
 ```sh
@@ -167,8 +167,8 @@ kubectl logs -f proxy-786cfbbf44-xzhhs -nproxy
 kubectl logs -f proxy-786cfbbf44-g9q7p -nproxy
 ```
 
-After client restart, connections to the proxy are re-established which implies re-resolving DNS on proxy service name
-DNS. Now all proxy instances are processing traffic.
+After the client restart, connections to the proxy are re-established, which implies re-resolving DNS on the proxy
+service name. Now all proxy instances are processing traffic.
 
 In conclusion, the traffic must be correctly load-balanced from the downstream/client/caller side.
 
@@ -180,7 +180,7 @@ kubectl delete namespace proxy
 
 ### Client Side Proxy - Sidecar
 
-The server runs as a headless service, and run a **proxy as a sidecar on each client instance**. No
+The server runs as a headless service and runs a **proxy as a sidecar on each client instance**. No
 load-balancing implementation needed in a client application—also, no proxy on the server side.
 
 ```sh
@@ -213,10 +213,10 @@ kubectl delete namespace clsidecar
 
 ### Weighted Traffic Routing ~ Canary
 
-Run two server versions as headless services, and run a proxy as a sidecar on each client instance. No
+Run two server versions as headless services and a proxy as a sidecar on each client instance. No
 load-balancing implementation is needed in a client application—also, no proxy on the server side.
 
-**Progressively switch traffic** from one to another server version.
+**Progressively switch traffic** from one server version to another.
 
 ```sh
 kubectl create namespace canary
@@ -307,11 +307,11 @@ kubectl delete namespace canary
 [xDS API](https://github.com/cncf/xds) (_x_ discover service, originally from
 [envoy](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/dynamic_configuration)) is an attempt
 at a standard API that different proxy products implement to load and adapt into their vendor-specific configuration.
-Such API in theory decouples proxies and configuration management, improving interoperability, however, altering proxy
+Such API, in theory, decouples proxies and configuration management, improving interoperability; however, altering proxy
 either of those would be feat due to various operational reasons.
 
 Configuration could be managed in various ways, for example, by plugging into k8s API and augmenting it using CRDs.
-As such the configuration is fed into proxies through xDS API. Essentially, proxies receive their
+As such, the configuration is fed into proxies through xDS API. Essentially, proxies receive their
 traffic configuration from the xDS API Server and are continuously updated.
 
 Here using a simplified version of a control plane - an example of
@@ -400,28 +400,28 @@ kubectl delete namespace xds
 Options:
 
 1. No proxies other than kube-proxy; recreate connections on each RPC or have client-side DNS balancing (either with
-   maxage or custom DNS resolver)
-2. Server side proxy with poor man support for proxy scaling - configure keepAlive connectionMaxAge and *Grace durations
+   max age or a custom DNS resolver)
+2. Server-side proxy with poor man support for proxy scaling - configure keepAlive connectionMaxAge and *Grace durations
    to eventually enforce clients to reconnect and re-resolve the DNS of the proxy. (assuming that clients implement
    rudimentary DNS load balancing)
-3. Client side proxy as a sidecar (or perhaps as a daemonset)
+3. Client-side proxy as a sidecar (or perhaps as a daemonset)
 4. Proxyless-grpc - xDS Load Balancing in grpc
    core ([intro](https://events.istio.io/istiocon-2022/sessions/proxyless-grpc/)
    , [feature overview](https://grpc.github.io/grpc/core/md_doc_grpc_xds_features.html))
 
 Discussion:
 
-1. Not acceptable, too much custom logic on the server or client side to ensure rudimentary load balancing, or worse any
-   kind of traffic management such as weight based routing
+1. Not acceptable, too much custom logic on the server or client side to ensure rudimentary load balancing or, worse any
+   kind of traffic management, such as weight-based routing
 2. Load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client-side code; load
    balancing proxy->server is based on DNS, which implies a delay in service discovery; it's not ideal)
    re-deployments of the proxy are tricky; potential latency increase due to too many node hops
    client@node1 -> proxy@node2 -> server@node3
 3. Optimal latency and optimal load balancing behavior for the price of more complicated client deployment but arguably,
-   the sidecar could be transparently injected by the infra teams at the time of deployment.
+   the infra teams could transparently inject the sidecar during deployment.
 
    This option, though, is only viable alongside a properly integrated control plane with a setup that
    makes proxies transparent to the client applications.
 
-4. Still in development but lots of features are available - looks like a promising pick in scope of gRPC. It still
-   implies a control plane and as of now it also runs a sidecar that talks xDS API.
+4. Still in development but lots of features are available - it looks like a good pick in the scope of gRPC. It still
+   implies a control plane, and it also runs a sidecar that talks xDS API.
