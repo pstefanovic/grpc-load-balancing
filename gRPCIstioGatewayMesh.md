@@ -1,6 +1,6 @@
-# Gateway API + Istio for east-west traffic
+# East-West Traffic Management via Gateway API and Istio
 
-Wait what's Gateway API? Read [here](https://gateway-api.sigs.k8s.io/).
+Wait, what's Gateway API? Read [here](https://gateway-api.sigs.k8s.io/).
 
 But that's only supporting north-south traffic? Yes, but it seems to be moving into the mesh direction, glance through:
 
@@ -11,14 +11,14 @@ But that's only supporting north-south traffic? Yes, but it seems to be moving i
 * [Linkerd about GatewayAPI](https://buoyant.io/blog/linkerd-and-the-gateway-api) (mind the xDS API rant at the
   beginning)
 
-## Setup
+## Prep
 
-Let's demonstrate gRPC load balancing and some traffic management possibilities, specifically Weight based routing with
+Demonstrating gRPC load balancing and some traffic management possibilities, specifically Weight based routing with
 istio and its implementation of the experimental east-west Gateway API.
 
 ### kind
 
-Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster and build demo docker
+Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), create a cluster and load demo docker
 images:
 
 ```sh
