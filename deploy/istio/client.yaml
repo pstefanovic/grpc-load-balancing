@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: client
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: client
+        version: v1
+        sidecar.istio.io/inject: "true"
+    spec:
+      serviceAccountName: client
+      containers:
+        - image: grpc-load-balancing/client:1
+          name: client
+          env:
+            - name: SERVER_ADDRESS
+              value: server:50051
+            - name: NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name

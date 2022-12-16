@@ -23,7 +23,7 @@ docker build -t grpc-load-balancing/xds:1 --target xds -f Dockerfile .
 
 ### Deploy to Kind cluster
 
-Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)..
+Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
 
 Create a cluster to run demos:
 
@@ -451,3 +451,4 @@ Discussion:
 * [ ] service-mesh tryouts
     * [ ] istio tryout with only client-side proxy as a sidecar
     * [ ] linkerd tryout ...
+    * [ ] compatibility with north-south routing 
