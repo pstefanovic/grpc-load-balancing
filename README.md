@@ -137,7 +137,7 @@ Clean up
 kubectl delete namespace maxage
 ```
 
-### Server-Side Ingress Proxy
+### Server-Side Proxy
 
 The server runs as a headless service but without max age, instead run a **proxy in front of server instances**.
 Proxy runs as a headless service. Before opening a connection to the proxy, client runs a DNS resolution on the
@@ -197,9 +197,9 @@ Clean up
 kubectl delete namespace proxy
 ```
 
-### Client Side Egress Proxy - Sidecar
+### Client Side Proxy - Sidecar
 
-The server runs as a headless service, and run an egress **proxy as a sidecar on each client instance**. No
+The server runs as a headless service, and run a **proxy as a sidecar on each client instance**. No
 load-balancing implementation needed in a client application—also, no proxy on the server side.
 
 ```sh
@@ -232,7 +232,7 @@ kubectl delete namespace clsidecar
 
 ### Weighted Traffic Routing ~ Canary
 
-Run two server versions as headless services, and run an egress proxy as a sidecar on each client instance. No
+Run two server versions as headless services, and run a proxy as a sidecar on each client instance. No
 load-balancing implementation is needed in a client application—also, no proxy on the server side.
 
 **Progressively switch traffic** from one to another server version.
@@ -309,7 +309,7 @@ Observe a significant amount of traffic flowing to server-v2. Now remove server-
 Observe no traffic flowing to server-v1 anymore.
 
 This approach demonstrates that blue-green or canary deployments of a server can be achieved with just a client-side
-egress proxy. The same result could be achieved by adjusting route configurations (filters section) which also brings
+proxy. The same result could be achieved by adjusting route configurations (filters section) which also brings
 header-based routing out of the box. Header-based routing is helpful for so-called initial preview deployments,
 sometimes a precursor to canaries.
 
@@ -339,7 +339,7 @@ underneath) and serves it through an xDS API. Proxies are pointed to using xDSSe
 
 #### Testing
 
-Run two server versions as headless services, and run an egress proxy as a sidecar on each client instance.
+Run two server versions as headless services, and run a proxy as a sidecar on each client instance.
 Run an **xdsServer** and point sidecar proxy to it.
 No load-balancing implementation is needed in a client application—also, no proxy on the server side.
 
@@ -418,11 +418,11 @@ kubectl delete namespace xds
 
 1. No proxies other than kube-proxy; recreate connections on each RPC or have client-side DNS balancing (either with
    maxage or custom DNS resolver)
-2. Server-side ingress proxy without scaling support -- just run singular and huge proxy instance :)
-3. Server side ingress proxy with poor man proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to
+2. Server-side proxy without scaling support -- just run singular and huge proxy instance :)
+3. Server side proxy with poor man proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to
    eventually enforce clients to reconnect and re-resolve the DNS of the proxy. (assuming that clients implement
    rudimentary DNS load balancing)
-4. Client side egress proxy as a sidecar (or perhaps as a daemonset)
+4. Client side proxy as a sidecar (or perhaps as a daemonset)
 5. Proxyless-grpc - xDS Load Balancing in grpc
    core ([intro](https://events.istio.io/istiocon-2022/sessions/proxyless-grpc/)
    , [feature overview](https://grpc.github.io/grpc/core/md_doc_grpc_xds_features.html))
