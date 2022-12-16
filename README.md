@@ -1,4 +1,4 @@
-# east-west gRPC Load Balancing in k8s clusters
+# East-West gRPC Load Balancing in k8s clusters
 
 ## Demo Setup
 
@@ -21,9 +21,11 @@ docker build -t grpc-load-balancing/server:1 --target server -f Dockerfile .
 docker build -t grpc-load-balancing/xds:1 --target xds -f Dockerfile .
 ```
 
-^^^ watch the version number if multiple versions are created
-
 ### Deploy to Kind cluster
+
+Install [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)..
+
+Create a cluster to run demos:
 
 ```sh
 kind create cluster --name grpc-load-balancing
@@ -43,6 +45,10 @@ kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 
 ### Service Type Cluster IP
 
+The server runs as a **Cluster-IP service**. Before opening a connection to the server, client runs a DNS resolution on
+the
+server service name which results in a single IP address.
+
 ```sh
 kubectl create namespace clusterip
 kubectl apply -f deploy/clusterip/server.yaml -n clusterip
@@ -61,6 +67,11 @@ kubectl delete namespace clusterip
 
 ### Headless service
 
+The server runs as a **headless service**. Before opening a connection to the server, client runs a DNS resolution on
+the
+server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
+balancing between resolved IPs.
+
 ```sh
 kubectl create namespace headless
 kubectl apply -f deploy/headless/server.yaml -n headless
@@ -78,12 +89,13 @@ However, let's increase the number of server replicas from 3 to 5:
 kubectl patch deploy server -n headless -p '"spec": {"replicas": 5}'
 ```
 
-For example, two new replicas are (`kubectl get pods -n headless`):
+For example, two new instances are (`kubectl get pods -n headless`):
 
 * server-56dc579658-x4746
 * server-56dc579658-mjzp7
 
-There is no traffic on them (check their logs or client logs).
+There is no traffic on them (check their logs or client logs). Client will not be aware of the new server instances
+until it re-resolves DNS on the server service name - by default that happens only on connection creation.
 
 Clean up
 
@@ -93,7 +105,11 @@ kubectl delete namespace headless
 
 ### Max connection age (+headless)
 
-Setting max-age to 10s + grace 20s
+The server runs as a headless service. Before opening a connection to the server, client runs a DNS resolution on the
+server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
+balancing between resolved IPs.
+
+Setting **max-age to 10s + grace to 20s on the server side**.
 
 ```sh
 kubectl create namespace maxage
@@ -113,8 +129,9 @@ kubectl logs -f -l app=client -n maxage
 # observe for at least 1 minute
 ```
 
-Thanks to the max-age setting, a connection is recreated on the client side, and as a side effect, new server instances
-are resolved via DNS. So eventually, there is traffic on all server instances (check their logs or client logs).
+Thanks to the max-age setting, a connection is eventually recreated on the client side, and as a side effect, new server
+instances are resolved via DNS. So eventually, there is traffic on all server instances (check their logs or client
+logs).
 
 Clean up
 
@@ -124,7 +141,10 @@ kubectl delete namespace maxage
 
 ### Server-Side Ingress Proxy
 
-The server runs as a headless service but without max age, instead run a proxy in front of server instances.
+The server runs as a headless service but without max age, instead run a **proxy in front of server instances**.
+Proxy runs as a headless service. Before opening a connection to the proxy, client runs a DNS resolution on the
+proxy service name which potentially results in multiple IP addresses, one for each proxy instance - client runs a
+round-robin balancing between resolved IPs.
 
 ```sh
 kubectl create namespace proxy
@@ -149,8 +169,8 @@ kubectl logs -f -l app=client -n proxy
 Proxy discovers new server instances, sets up connections, and balances RPCs. Proxy also slightly adds on
 latency and could result in up to two extra node hops (client[@node1] -> proxy[@node2] -> server[@node3]).
 
-However, what if we scale the proxy itself (it's running as a headless service but only with one instance), say from 1
-to 3 and let's observe logs of newly spawned proxy instances:
+However, what if we scale the proxy itself (it's running as a headless service but only with one instance). Let's
+increase from 1 to 3 replicas and observe logs of newly spawned proxy instances:
 
 ```sh
 kubectl patch deploy proxy -n proxy -p '"spec": {"replicas": 3}'
@@ -168,7 +188,8 @@ kubectl logs -f proxy-786cfbbf44-xzhhs -nproxy
 kubectl logs -f proxy-786cfbbf44-g9q7p -nproxy
 ```
 
-Now all proxy instances are processing traffic.
+After client restart, connections to the proxy are re-established which implies re-resolving DNS on proxy service name
+DNS. Now all proxy instances are processing traffic.
 
 In conclusion, the traffic must be correctly load-balanced from the downstream/client/caller side.
 
@@ -180,8 +201,8 @@ kubectl delete namespace proxy
 
 ### Client Side Egress Proxy - Sidecar
 
-The server runs as a headless service, and a proxy is deployed as a sidecar on each client instance. No load-balancing
-implementation needed in a client application—also, no proxy on the server side.
+The server runs as a headless service, and run an egress **proxy as a sidecar on each client instance**. No
+load-balancing implementation needed in a client application—also, no proxy on the server side.
 
 ```sh
 kubectl create namespace clsidecar
@@ -213,8 +234,10 @@ kubectl delete namespace clsidecar
 
 ### Weighted Traffic Routing ~ Canary
 
-Run two server versions as headless services, and a proxy is deployed as a sidecar on each client instance. No
+Run two server versions as headless services, and run an egress proxy as a sidecar on each client instance. No
 load-balancing implementation is needed in a client application—also, no proxy on the server side.
+
+**Progressively switch traffic** from one to another server version.
 
 ```sh
 kubectl create namespace canary
@@ -287,10 +310,10 @@ Observe a significant amount of traffic flowing to server-v2. Now remove server-
 
 Observe no traffic flowing to server-v1 anymore.
 
-This approach demonstrates that blue-green or canary deployments can be achieved with just a client-side egress proxy.
-The same result could be achieved by adjusting route configurations (filters section) which also brings header-based
-routing out of the box. Header-based routing is helpful for so-called initial preview deployments, sometimes a precursor
-to canaries.
+This approach demonstrates that blue-green or canary deployments of a server can be achieved with just a client-side
+egress proxy. The same result could be achieved by adjusting route configurations (filters section) which also brings
+header-based routing out of the box. Header-based routing is helpful for so-called initial preview deployments,
+sometimes a precursor to canaries.
 
 The issue, however, is the static proxy configuration - it imposes tight coupling between clients and servers.
 
@@ -318,8 +341,8 @@ underneath) and serves it through an xDS API. Proxies are pointed to using xDSSe
 
 #### Testing
 
-Run two server versions as headless services, and a proxy is deployed as a sidecar on each client instance.
-Run an xdsServer and point sidecar proxy to it.
+Run two server versions as headless services, and run an egress proxy as a sidecar on each client instance.
+Run an **xdsServer** and point sidecar proxy to it.
 No load-balancing implementation is needed in a client application—also, no proxy on the server side.
 
 ```sh
@@ -395,7 +418,8 @@ kubectl delete namespace xds
 
 ## gRPC Load Balancing Options:
 
-1. No proxies other than kube-proxy; recreate connections on each RPC or have client-side DNS balancing and maxage
+1. No proxies other than kube-proxy; recreate connections on each RPC or have client-side DNS balancing (either with
+   maxage or custom DNS resolver)
 2. Server-side ingress proxy without scaling support -- just run singular and huge proxy instance :)
 3. Server side ingress proxy with poor man proxy scaling - configure keepAlive connectionMaxAge and *Grace durations to
    eventually enforce clients to reconnect and re-resolve the DNS of the proxy. (assuming that clients implement
@@ -407,7 +431,8 @@ kubectl delete namespace xds
 
 Discussion:
 
-1. Not acceptable since weighted traffic routing will be needed, which implies a smarter proxy then kube-proxy
+1. Not acceptable, too much custom logic on the server or client side, also weighted traffic routing will be needed,
+   which implies a proxy (kube-proxy does not cut it)
 2. Not acceptable
 3. Load balancing client->proxy implies a delay (keepAlive) and is interdependent with the client-side code; load
    balancing proxy->server is based on DNS, which implies a delay in service discovery; it's not ideal)
@@ -420,7 +445,8 @@ Discussion:
    This option, though, is only viable alongside a properly integrated xDS control plane with an improved setup that
    makes proxies transparent to the client applications running as the main container.
 
-5. Still lots of development in progress - looks like a promising pick for the future
+5. Still in development but lots of features are available - looks like a promising pick in scope of gRPC. It still
+   implies a control plane and as of now it also runs a sidecar that talks xDS API.
 
 ## TODO
 
