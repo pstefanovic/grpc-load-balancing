@@ -7,9 +7,9 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	serverv3 "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	log "github.com/sirupsen/logrus"
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/processor"
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/server"
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/watcher"
+	"pstefanovic/grpc-load-balancing/xdsdummy/processor"
+	"pstefanovic/grpc-load-balancing/xdsdummy/server"
+	"pstefanovic/grpc-load-balancing/xdsdummy/watcher"
 )
 
 var (

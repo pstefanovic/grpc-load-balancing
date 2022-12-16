@@ -30,7 +30,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	pb "pstefanovic/grpc-load-balancing/helloworld"
 )
 
 const (

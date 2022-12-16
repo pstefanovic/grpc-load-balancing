@@ -46,8 +46,7 @@ kind load docker-image grpc-load-balancing/xds:1 --name grpc-load-balancing
 ### Service Type Cluster IP
 
 The server runs as a **Cluster-IP service**. Before opening a connection to the server, client runs a DNS resolution on
-the
-server service name which results in a single IP address.
+the server service name which results in a single IP address.
 
 ```sh
 kubectl create namespace clusterip
@@ -68,8 +67,7 @@ kubectl delete namespace clusterip
 ### Headless service
 
 The server runs as a **headless service**. Before opening a connection to the server, client runs a DNS resolution on
-the
-server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
+the server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
 balancing between resolved IPs.
 
 ```sh
@@ -109,7 +107,7 @@ The server runs as a headless service. Before opening a connection to the server
 server service name which results in multiple IP addresses, one for each server instance - client runs a round-robin
 balancing between resolved IPs.
 
-Setting **max-age to 10s + grace to 20s on the server side**.
+Setting **max-age to 10s + grace to 20s on the server side** to force reconnection.
 
 ```sh
 kubectl create namespace maxage

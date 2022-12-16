@@ -16,10 +16,10 @@ RUN go mod download
 COPY . .
 
 # Build binaries.
-RUN go build -o /usr/local/bin/server helloworld/greeter_server/main.go
-RUN go build -o /usr/local/bin/client helloworld/greeter_client/main.go
+RUN go build -o /usr/local/bin/server cmd/greeter_server/main.go
+RUN go build -o /usr/local/bin/client cmd/greeter_client/main.go
 
-RUN go build -o /usr/local/bin/xds ./xdsdummy/cmd/server/main.go
+RUN go build -o /usr/local/bin/xds cmd/xds/main.go
 
 FROM alpine:3.16 as server
 

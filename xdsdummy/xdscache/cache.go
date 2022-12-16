@@ -2,7 +2,7 @@ package xdscache
 
 import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/resources"
+	"pstefanovic/grpc-load-balancing/xdsdummy/resources"
 )
 
 type XDSCache struct {

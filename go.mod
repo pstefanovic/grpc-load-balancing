@@ -8,7 +8,6 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/sirupsen/logrus v1.7.0
 	google.golang.org/grpc v1.50.1
-	google.golang.org/grpc/examples v0.0.0-20221209215812-3e27f89917e8
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )

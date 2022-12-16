@@ -8,15 +8,15 @@ import (
 	"os"
 	"strconv"
 
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/resources"
+	"pstefanovic/grpc-load-balancing/xdsdummy/resources"
 
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/xdscache"
+	"pstefanovic/grpc-load-balancing/xdsdummy/xdscache"
 
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"github.com/sirupsen/logrus"
-	"pstefanovic/grpc-load-balancing/xdsdummy/internal/watcher"
+	"pstefanovic/grpc-load-balancing/xdsdummy/watcher"
 )
 
 type Processor struct {
