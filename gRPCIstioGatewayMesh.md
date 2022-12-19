@@ -11,6 +11,15 @@ But that's only supporting north-south traffic? Yes, but it seems to be moving i
 * [Linkerd about GatewayAPI](https://buoyant.io/blog/linkerd-and-the-gateway-api) (mind the xDS API rant at the
   beginning)
 
+Does it only support HTTP routes, what about gRPC? In general, gRPC can be routed as plain HTTP/2, e.g. at a "lower"
+level; implying that some, potentially significant, features are missed out.
+Still, [GRPCRoute](https://gateway-api.sigs.k8s.io/api-types/grpcroute/#grpcroute) is on the Gateway API's radar, with a
+specification under the experimental channel - [GEP-1016](https://gateway-api.sigs.k8s.io/geps/gep-1016/).
+
+Implementations for the GRPCRoute on Gateway API from individual service mesh products such
+as [Istio](https://github.com/istio/istio/pull/41839) or[Linkerd](https://github.com/linkerd/linkerd2/issues/8663) are
+yet to come.
+
 ## Prep
 
 Demonstrating gRPC load balancing and some traffic management possibilities, specifically Weight based routing with
@@ -59,8 +68,9 @@ no proxy on the server side.
 Traffic setup:
 
 * one common Service "server" that selects pods from both versions server-v1 and server-v2;
+* client sends its traffic to a "server" service;
 * HTTPRoute "server-routes" that matches all traffic from the "server" service and direct it to the "server-v1" service.
-* client sends its traffic to a "server" service.
+
 
 Deploying server, routes, and client:
 

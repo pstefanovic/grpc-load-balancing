@@ -5,8 +5,8 @@ Bringing together a couple of demonstrations concerning gRPC Load Balancing in k
 gRPC load balancing is an interesting topic since it implies L7 load balancer capabilities. Such a
 thing is not possible with an out-of-the-box kube-proxy solution, contrasting to REST load balancing.
 
-Why L7 load balancing, shouldn't something like L4 still work? A significant reason is the gRPC's usage of multiplexing
-provided by http2 on persistent and long-lived connections. With that, gRPC avoids costs related to connection
+Why L7 load balancing, shouldn't something like L4 still work? A significant reason is the gRPC's usage of multiplexing,
+provided by http2, on persistent and long-lived connections. With that, gRPC avoids costs related to connection
 recreation and mitigates head-of-line blocking problem ([Wiki](https://en.wikipedia.org/wiki/Head-of-line_blocking)
 , [SO](https://stackoverflow.com/questions/45583861/how-does-http2-solve-head-of-line-blocking-hol-issue)),
 which in turn significantly reduces the number of open connections needed between an individual client and a server
@@ -29,12 +29,11 @@ resolution and does round-robin load balancing in case multiple IPs are resolved
 
 * [gRPC Load Balancing Pitfalls and Options](gRPCLoadBalancingBasics.md)
 * [gRPC With Istio And Gateway API](gRPCIstioGatewayMesh.md)
+* [gRPC with Linkerd and SMI](gRPCLinkerdSMI.md)
 * ...
 
 ## TODO
 
 * service-mesh tryouts
-    * [x] istio tryout with only client-side proxy as a sidecar
-    * [ ] linkerd tryout ...
     * [ ] compatibility with north-south routing
     * [ ] rate limiting
