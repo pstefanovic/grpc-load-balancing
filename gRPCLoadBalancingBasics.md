@@ -54,8 +54,6 @@ round-robin balancing between resolved IPs.
 ```sh
 kubectl create namespace headless
 kubectl apply -f deploy/headless/server.yaml -n headless
-
-## wait a few sec!!!
 kubectl apply -f deploy/headless/client.yaml -n headless
 
 kubectl logs -f -l app=client -n headless
@@ -68,13 +66,8 @@ However, let's increase the number of server replicas from 3 to 5:
 kubectl patch deploy server -n headless -p '"spec": {"replicas": 5}'
 ```
 
-For example, two new instances are (`kubectl get pods -n headless`):
-
-* server-56dc579658-x4746
-* server-56dc579658-mjzp7
-
-There is no traffic on them (check their logs or client logs). The client will not be aware of the new server instances
-until it re-resolves DNS on the server service name - by default, that happens only on connection creation.
+Checking logs, observe there is no traffic on the new server instances. The client will not be aware of the new server
+instances until it re-resolves DNS on the server service name - by default, that happens only on connection creation.
 
 Clean up
 
@@ -88,7 +81,7 @@ The server runs as a headless service. Before opening a connection to the server
 the server service name, which results in multiple IP addresses, one for each server instance - the client runs a
 round-robin balancing between resolved IPs.
 
-Setting **max-age to 10s + grace to 20s on the server side** to force reconnection.
+Setting **connection max-age to 10s + grace to 20s on the server side** to force reconnection.
 
 ```sh
 kubectl create namespace maxage
@@ -96,7 +89,6 @@ kubectl apply -f deploy/maxage/server.yaml -n maxage
 kubectl apply -f deploy/maxage/client.yaml -n maxage
 
 kubectl logs -f -l app=client -n maxage
-# observe for at least 1 minute
 ```
 
 Observe that RPCs are balanced between server instances. Let's increase the number of server replicas from 3 to 5:
@@ -104,11 +96,11 @@ Observe that RPCs are balanced between server instances. Let's increase the numb
 ```sh
 kubectl patch deploy server -n maxage -p '"spec": {"replicas": 5}'
 
-kubectl logs -f -l app=client -n maxage
 # observe for at least 1 minute
+kubectl logs -f -l app=client -n maxage
 ```
 
-Thanks to the max-age setting, a connection is eventually recreated on the client side, and as a side effect, new server
+Thanks to the max-age setting, a connection is eventually recreated, and as a side effect, new server
 instances are resolved via DNS. So ultimately, there is traffic on all server instances (check their logs or client
 logs).
 
@@ -259,14 +251,14 @@ Observe that traffic is shifting to server-v2. Now update the config to a 50/50 
 ```yaml
 ...
 - lb_endpoints:
-    - load_balancing_weight: 99
+    - load_balancing_weight: 50
       endpoint:
         address:
           socket_address:
             address: server-v1
             port_value: 50051
 
-    - load_balancing_weight: 1
+    - load_balancing_weight: 50
       endpoint:
         address:
           socket_address:
@@ -306,13 +298,13 @@ kubectl delete namespace canary
 
 [xDS API](https://github.com/cncf/xds) (_x_ discover service, originally from
 [envoy](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/operations/dynamic_configuration)) is an attempt
-at a standard API that different proxy products implement to load and adapt into their vendor-specific configuration.
-Such API, in theory, decouples proxies and configuration management, improving interoperability; however, altering proxy
-either of those would be feat due to various operational reasons.
+at a standard API that different proxy or control plane products could implement to load and adapt onto their
+vendor-specific configuration. Such API, in theory, decouples proxies and control planes, improving
+interoperability; however, altering either of those would be a feat due to various operational reasons.
 
 Configuration could be managed in various ways, for example, by plugging into k8s API and augmenting it using CRDs.
 As such, the configuration is fed into proxies through xDS API. Essentially, proxies receive their
-traffic configuration from the xDS API Server and are continuously updated.
+traffic configuration from a xDS API compatible control plane and are continuously updated.
 
 Here using a simplified version of a control plane - an example of
 [xDSServer](https://github.com/stevesloka/envoy-xds-server). It centralizes traffic configuration (uses a file

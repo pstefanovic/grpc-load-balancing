@@ -23,8 +23,7 @@ A request is a `Hello` message containing a client identifier and the request co
 echo with an added prefix identifying the server that processed the request.
 
 The client accepts the server's address as part of its configuration, e.g., dns:///server:50051. The client uses DNS
-resolution
-and does round-robin load balancing in case multiple IPs are resolved.
+resolution and does round-robin load balancing in case multiple IPs are resolved.
 
 ## Demos
 
@@ -37,4 +36,5 @@ and does round-robin load balancing in case multiple IPs are resolved.
 * service-mesh tryouts
     * [x] istio tryout with only client-side proxy as a sidecar
     * [ ] linkerd tryout ...
-    * [ ] compatibility with north-south routing 
+    * [ ] compatibility with north-south routing
+    * [ ] rate limiting

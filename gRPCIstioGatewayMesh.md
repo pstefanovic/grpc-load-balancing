@@ -78,9 +78,8 @@ kubectl logs -f -l app=client -n istio
 ```
 
 Observe that the client pod has two containers - client application as the main container and istio-proxy as a sidecar.
-Many
-other things got injected too - labels and annotations related to istio and prometheus, init container for rewriting
-iptables etc.
+Many other things got injected too - labels and annotations related to istio and prometheus, init container for
+rewriting iptables etc.
 
 Update server-routes to shift a small percentage of traffic to server-v2 service:
 
@@ -125,4 +124,15 @@ rules:
       - name: server-v2
         port: 50051
         weight: 100
+```
+
+Observe that no traffic is flowing to server-v1 anymore.
+Routing configuration, owned by the server deployment, is seamlessly picked up and propagated to all related proxies by
+the control plane.
+
+Clean up
+
+```sh
+kubectl delete namespace istio
+kind delete clusters istio-gateway-mesh
 ```
