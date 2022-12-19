@@ -2,17 +2,16 @@
 
 Bringing together a couple of demonstrations concerning gRPC Load Balancing in k8s clusters.
 
-In simple terms, gRPC load balancing is an interesting topic since it implies L7 load balancer capabilities. Such a
+gRPC load balancing is an interesting topic since it implies L7 load balancer capabilities. Such a
 thing is not possible with an out-of-the-box kube-proxy solution, contrasting to REST load balancing.
 
-The reason for L7 load balancing, should something like L4 still work? Without trying to supply a complete answer,
-a significant reason is the gRPC's usage of multiplexing provided by http2 on persistent and long-lived connections.
-With that, gRPC avoids costs related to connection recreation and mitigates head-of-line blocking
-problem ([Wiki](https://en.wikipedia.org/wiki/Head-of-line_blocking)
+Why L7 load balancing, shouldn't something like L4 still work? A significant reason is the gRPC's usage of multiplexing
+provided by http2 on persistent and long-lived connections. With that, gRPC avoids costs related to connection
+recreation and mitigates head-of-line blocking problem ([Wiki](https://en.wikipedia.org/wiki/Head-of-line_blocking)
 , [SO](https://stackoverflow.com/questions/45583861/how-does-http2-solve-head-of-line-blocking-hol-issue)),
 which in turn significantly reduces the number of open connections needed between an individual client and a server
-cluster. On the down-side, it means that connection-based load balancing (such as L4) is not optimal; one needs
-to introspect the payload to balance RPCs themselves.
+cluster. On the down-side, connection-based load balancing (such as L4) is not optimal; one needs to introspect the
+payload to balance RPCs themselves.
 
 ## Basic Setup for Demos
 
