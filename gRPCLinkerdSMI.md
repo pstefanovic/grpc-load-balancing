@@ -1,9 +1,22 @@
 # East-West Traffic Management via SMI and Linkerd
 
-What is SMI? How is it different from the Gateway API? TODO
+**Q: What is SMI?** The goal of the [Service Mesh Interface](https://smi-spec.io/) (SMI) is to provide a _common,
+portable set_
+of service mesh APIs which a Kubernetes user can use in a provider agnostic manner. In short, it is an attempt to create
+a standard API spec. In practice the standardization didn't come through and there is little activity on the spec in
+past two years:
 
-Why not combining SMI with istio too, instead there is a
-demo on [gRPC With Istio And Gateway API](gRPCIstioGatewayMesh.md)? TODO
+* istio support is unclear - ([initial repo](https://github.com/servicemeshinterface/smi-adapter-istio),
+  ref [issue](https://github.com/servicemeshinterface/smi-adapter-istio/issues/96))
+  , ([next iteration](https://github.com/servicemeshinterface/istio-smi-controller) quite not done)
+* linkerd supports SMI's TrafficSplit spec through its [extension](https://linkerd.io/2.12/tasks/linkerd-smi/) model
+
+In any case, SMI initiative brought about some common understanding between mesh providers. One might think
+of it as a precursor to the [GAMMA initiative](https://gateway-api.sigs.k8s.io/contributing/gamma/).
+
+**Q: Seems SMI is not a thing anymore, why demo it?** Because it's good to cover SMI and because in case of linkerd it
+is still the advertised way of doing [traffic splits](https://linkerd.io/2.12/features/traffic-split/). This might not
+be the case soon in the future.
 
 ## Prep
 

@@ -1,8 +1,8 @@
 # East-West Traffic Management via Gateway API and Istio
 
-Wait, what's Gateway API? Read [here](https://gateway-api.sigs.k8s.io/).
+**Q: Wait, what's Gateway API?** Read [here](https://gateway-api.sigs.k8s.io/).
 
-But that's only supporting north-south traffic? Yes, but it seems to be moving into the mesh direction, glance through:
+**Q: But that's only supporting north-south traffic?** Yes, but it seems to be moving into the mesh direction, glance through:
 
 * [GAMMA Announcement from SMI camp](https://smi-spec.io/blog/announcing-smi-gateway-api-gamma/)
 * [GAMMA initiative](https://gateway-api.sigs.k8s.io/contributing/gamma/)
@@ -11,7 +11,7 @@ But that's only supporting north-south traffic? Yes, but it seems to be moving i
 * [Linkerd about GatewayAPI](https://buoyant.io/blog/linkerd-and-the-gateway-api) (mind the xDS API rant at the
   beginning)
 
-Does it only support HTTP routes, what about gRPC? In general, gRPC can be routed as plain HTTP/2, e.g. at a "lower"
+**Q: Does it only support HTTP routes, what about gRPC?** In general, gRPC can be routed as plain HTTP/2, e.g. at a "lower"
 level; implying that some, potentially significant, features are missed out.
 Still, [GRPCRoute](https://gateway-api.sigs.k8s.io/api-types/grpcroute/#grpcroute) is on the Gateway API's radar, with a
 specification under the experimental channel - [GEP-1016](https://gateway-api.sigs.k8s.io/geps/gep-1016/).
