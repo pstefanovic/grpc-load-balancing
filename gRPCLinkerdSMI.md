@@ -6,8 +6,8 @@ attempt to create a standard API spec. In practice, the standardization didn't c
 activity on the spec in the past two years:
 
 * istio support is unclear - ([initial repo](https://github.com/servicemeshinterface/smi-adapter-istio),
-  ref [issue](https://github.com/servicemeshinterface/smi-adapter-istio/issues/96))
-  , ([next iteration](https://github.com/servicemeshinterface/istio-smi-controller) quite not done)
+  ref [issue](https://github.com/servicemeshinterface/smi-adapter-istio/issues/96)),
+  ([next iteration](https://github.com/servicemeshinterface/istio-smi-controller) does not look finished)
 * linkerd supports SMI's TrafficSplit spec through its [extension](https://linkerd.io/2.12/tasks/linkerd-smi/) model
 
 In any case, the SMI initiative brought about shared understanding between mesh providers. One might think
@@ -69,7 +69,7 @@ Traffic setup:
 
 * one common Service "server" that selects pods from both versions server-v1 and server-v2;
 * client sends its traffic to a "server" service;
-* TrafficSplit "server-split" that matches all traffic destined for the "server" service and with destination
+* TrafficSplit "server-split" matches all traffic destined for the "server" service and with destination
   overriding it forwards to "server-v1".
 
 Deploying server, traffic split, and client:

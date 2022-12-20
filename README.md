@@ -29,4 +29,4 @@ resolution and does round-robin load balancing in case multiple IPs are resolved
 
 * [gRPC Load Balancing Pitfalls and Options](gRPCLoadBalancingBasics.md)
 * [gRPC With Istio And Gateway API](gRPCIstioGatewayMesh.md)
-* [gRPC with Linkerd and SMI](gRPCLinkerdSMI.md)
+* [gRPC With Linkerd and SMI](gRPCLinkerdSMI.md)
