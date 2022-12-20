@@ -30,10 +30,3 @@ resolution and does round-robin load balancing in case multiple IPs are resolved
 * [gRPC Load Balancing Pitfalls and Options](gRPCLoadBalancingBasics.md)
 * [gRPC With Istio And Gateway API](gRPCIstioGatewayMesh.md)
 * [gRPC with Linkerd and SMI](gRPCLinkerdSMI.md)
-* ...
-
-## TODO
-
-* service-mesh tryouts
-    * [ ] compatibility with north-south routing
-    * [ ] rate limiting
